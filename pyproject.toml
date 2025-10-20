@@ -1,0 +1,96 @@
+[project]
+name = "django-mobile-app-version"
+version = "1.0.0"
+description = "Pluggable app for your Django projects to modify your mobile app versions using your API."
+authors = [
+    {name = "Mohammad Javad Nikbakht", email = "javadnikbakht@mail.com"}
+]
+readme = "README.md"
+license = {text = "GPL-3.0"}
+requires-python = ">=3.6"
+keywords = ["django", "mobile", "app", "version", "api", "rest"]
+classifiers = [
+    "Environment :: Web Environment",
+    "Framework :: Django",
+    "Framework :: Django :: 3.0",
+    "Framework :: Django :: 3.1",
+    "Framework :: Django :: 3.2",
+    "Framework :: Django :: 4.0",
+    "Framework :: Django :: 4.1",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+    "Topic :: Internet :: WWW/HTTP :: WSGI",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+dependencies = [
+    "djangorestframework>=3.14.0",
+    "packaging>=21.3",
+]
+
+[project.urls]
+Homepage = "https://github.com/javadnikbakht/django_mobile_app_version"
+"Release Notes" = "https://github.com/javadnikbakht/django_mobile_app_version/releases"
+Source = "https://github.com/javadnikbakht/django_mobile_app_version"
+Tracker = "https://github.com/javadnikbakht/django_mobile_app_version/issues"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["mobile_app_version"]
+include-package-data = true
+zip-safe = false
+
+[tool.uv]
+# UV-specific configuration
+dev-dependencies = [
+    "pytest>=7.0.0",
+    "pytest-django>=4.5.0",
+    "black>=22.0.0",
+    "flake8>=5.0.0",
+    "mypy>=0.990",
+]
+
+[tool.uv.pip]
+# Optimize package resolution
+index-strategy = "unsafe-best-match"
+
+[tool.black]
+line-length = 88
+target-version = ['py36', 'py37', 'py38', 'py39', 'py310']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+  | migrations
+)/
+'''
+
+[tool.mypy]
+python_version = "3.6"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+
