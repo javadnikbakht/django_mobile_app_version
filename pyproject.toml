@@ -38,6 +38,15 @@ dependencies = [
     "packaging>=21.3",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-django>=4.5.0",
+    "black>=22.0.0",
+    "flake8>=5.0.0",
+    "mypy>=0.990",
+]
+
 [project.urls]
 Homepage = "https://github.com/javadnikbakht/django_mobile_app_version"
 "Release Notes" = "https://github.com/javadnikbakht/django_mobile_app_version/releases"
@@ -52,16 +61,6 @@ build-backend = "setuptools.build_meta"
 packages = ["mobile_app_version"]
 include-package-data = true
 zip-safe = false
-
-[tool.uv]
-# UV-specific configuration
-dev-dependencies = [
-    "pytest>=7.0.0",
-    "pytest-django>=4.5.0",
-    "black>=22.0.0",
-    "flake8>=5.0.0",
-    "mypy>=0.990",
-]
 
 [tool.uv.pip]
 # Optimize package resolution
