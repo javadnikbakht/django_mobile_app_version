@@ -1,6 +1,6 @@
 [project]
 name = "django-mobile-app-version"
-version = "1.0.0"
+version = "1.1.0"
 description = "Pluggable app for your Django projects to modify your mobile app versions using your API."
 authors = [
     {name = "Mohammad Javad Nikbakht", email = "javadnikbakht@mail.com"}
