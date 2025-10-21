@@ -1,5 +1,7 @@
 from django.db import models
 
+from mobile_app_version.validators import validate_semantic_version
+
 
 class MobileAppVersion(models.Model):
     class PlatformType(models.TextChoices):
@@ -7,7 +9,13 @@ class MobileAppVersion(models.Model):
         IOS = 'IOS', 'ios'
         PWA = 'PWA', 'pwa'
 
-    version = models.CharField(max_length=100, null=False, blank=False)
+    version = models.CharField(
+        max_length=100,
+        null=False,
+        blank=False,
+        validators=[validate_semantic_version],
+        help_text='Version must follow semantic versioning format (X.Y.Z). Example: 1.0.0'
+    )
     platform_type = models.CharField(
         max_length=10, choices=PlatformType.choices, null=False, blank=False)
     release_notes = models.TextField(blank=True)
