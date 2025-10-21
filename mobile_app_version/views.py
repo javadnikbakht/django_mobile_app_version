@@ -10,27 +10,35 @@ from mobile_app_version.serializers import MobileAppVersionSerializer
 
 @permission_classes((AllowAny,))
 class AppInfoView(APIView):
-
     def get(self, request, platform_type):
-        app = MobileAppVersion.objects.filter(platform_type=platform_type).order_by('-id').first()
+        app = (
+            MobileAppVersion.objects.filter(platform_type=platform_type)
+            .order_by("-id")
+            .first()
+        )
         app_serializer = MobileAppVersionSerializer(app)
 
-        return Response({
-            'success': True,
-            'data': {
-                'app': app_serializer.data,
+        return Response(
+            {
+                "success": True,
+                "data": {
+                    "app": app_serializer.data,
+                },
             },
-        }, status=status.HTTP_200_OK)
+            status=status.HTTP_200_OK,
+        )
 
 
 @permission_classes((AllowAny,))
 class LatestAppVersion(APIView):
-
     def get(self, request):
         app = MobileAppVersion.objects.filter(
-            platform_type=request.GET.get('type', '')).last()
+            platform_type=request.GET.get("type", "")
+        ).last()
         app_serializer = MobileAppVersionSerializer(app)
-        return Response({
-            'success': True,
-            'data': app_serializer.data,
-        })
+        return Response(
+            {
+                "success": True,
+                "data": app_serializer.data,
+            }
+        )
