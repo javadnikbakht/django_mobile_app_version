@@ -18,27 +18,40 @@ class AppVersionControlMiddleware(MiddlewareMixin):
         app_version = request.headers.get("App-Version", "")
         supported_platforms = MobileAppVersion.PlatformType.values
         if not (app_platform and app_version):
-            return Response(data={
-                "success": False,
-                "message": REQUIRED_HEADERS_NOT_SENT
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                data={"success": False, "message": REQUIRED_HEADERS_NOT_SENT},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         if app_platform not in supported_platforms:
-            return Response(data={
-                "success": False,
-                "message": UNSUPPORTED_PLATFORM_MESSAGE,
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                data={
+                    "success": False,
+                    "message": UNSUPPORTED_PLATFORM_MESSAGE,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        last_force_update_version = MobileAppVersion.objects.filter(platform_type=app_platform,
-                                                                    forcing_update=True).last().version
+        last_force_update_version = (
+            MobileAppVersion.objects.filter(
+                platform_type=app_platform, forcing_update=True
+            )
+            .last()
+            .version
+        )
         if parse_version(app_version) < parse_version(last_force_update_version):
-            latest_app_version = MobileAppVersion.objects.filter(type=app_platform).last()
+            latest_app_version = MobileAppVersion.objects.filter(
+                type=app_platform
+            ).last()
             if latest_app_version:
                 app_serializer = MobileAppVersionSerializer(latest_app_version)
-                return Response(data={
-                    "success": False,
-                    "message": UPGRADE_TO_LATEST_VERSION_MESSAGE,
-                    "data": {
-                        "force-update-to": app_serializer.data,
+                return Response(
+                    data={
+                        "success": False,
+                        "message": UPGRADE_TO_LATEST_VERSION_MESSAGE,
+                        "data": {
+                            "force-update-to": app_serializer.data,
+                        },
                     },
-                }, status=420)
+                    status=420,
+                )

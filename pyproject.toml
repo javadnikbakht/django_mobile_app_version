@@ -7,7 +7,7 @@ authors = [
 ]
 readme = "README.md"
 license = {text = "GPL-3.0"}
-requires-python = ">=3.8"
+requires-python = ">=3.13"
 keywords = ["django", "mobile", "app", "version", "api", "rest"]
 classifiers = [
     "Environment :: Web Environment",
@@ -26,6 +26,9 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Internet :: WWW/HTTP",
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
     "Topic :: Internet :: WWW/HTTP :: WSGI",
@@ -45,6 +48,7 @@ dev = [
     "black>=22.0.0",
     "flake8>=5.0.0",
     "mypy>=0.990",
+    "ruff>=0.1.0",
 ]
 
 [project.urls]
@@ -68,7 +72,7 @@ index-strategy = "unsafe-best-match"
 
 [tool.black]
 line-length = 88
-target-version = ['py38', 'py39', 'py310', 'py311']
+target-version = ["py38", "py39", "py310", "py311", "py312", "py313"]
 include = '\.pyi?$'
 extend-exclude = '''
 /(
@@ -86,8 +90,7 @@ extend-exclude = '''
 '''
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.13"
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
-
