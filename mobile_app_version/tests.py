@@ -1,8 +1,8 @@
+
 from django.test import TestCase
 from django.core.exceptions import ValidationError
 from rest_framework.test import APITestCase
 from rest_framework import serializers
-
 from mobile_app_version.models import MobileAppVersion
 from mobile_app_version.serializers import MobileAppVersionSerializer
 from mobile_app_version.validators import validate_semantic_version

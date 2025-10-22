@@ -8,7 +8,7 @@ We use [UV](https://github.com/astral-sh/uv) for fast and reliable dependency ma
 
 ### Prerequisites
 
-- Python 3.8 or higher
+- Python 3.13 or higher
 - Git
 
 ### Option 1: Using UV (Recommended) 🚀
@@ -155,7 +155,7 @@ We follow these guidelines:
 - **Black** for code formatting (line length: 88)
 - **flake8** for linting
 - **mypy** for type checking
-- Python 3.8+ compatible code
+- Python 3.13+ compatible code
 
 Before submitting a pull request, please ensure:
 1. Code is formatted with Black
@@ -245,4 +245,3 @@ django_mobile_app_version/
 By contributing to this project, you agree that your contributions will be licensed under the GNU General Public License v3 (GPLv3).
 
 Thank you for contributing! 🎉
-

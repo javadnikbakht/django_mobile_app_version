@@ -2,6 +2,12 @@
 
 A Django app for managing mobile app versions through your API.
 
+## Requirements
+
+- Python 3.13+
+- Django 3.0+
+- Django REST Framework 3.14+
+
 ## Installation
 
 ```sh

@@ -13,4 +13,4 @@ class MobileAppVersionSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = MobileAppVersion
-        fields = '__all__'
+        fields = "__all__"
