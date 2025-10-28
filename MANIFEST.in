@@ -1,0 +1,22 @@
+# Include documentation files
+include README.md
+include LICENSE
+include CONTRIBUTING.md
+
+# Include requirements
+include requirements.txt
+
+# Include configuration files
+include pyproject.toml
+include setup.cfg
+
+# Include package data
+recursive-include mobile_app_version *.py
+
+# Exclude unnecessary files
+exclude .gitignore
+exclude .python-version
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+recursive-exclude * .DS_Store
+
