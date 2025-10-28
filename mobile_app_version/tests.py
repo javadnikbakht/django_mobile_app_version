@@ -1,11 +1,16 @@
-
+import csv
+import io
 from django.test import TestCase
 from django.core.exceptions import ValidationError
+from django.contrib.admin.sites import AdminSite
+from django.contrib.auth.models import User
+from django.test import RequestFactory
 from rest_framework.test import APITestCase
 from rest_framework import serializers
 from mobile_app_version.models import MobileAppVersion
 from mobile_app_version.serializers import MobileAppVersionSerializer
 from mobile_app_version.validators import validate_semantic_version
+from mobile_app_version.admin import MobileAppVersionAdmin
 
 
 class SemanticVersionValidatorTestCase(TestCase):
@@ -308,3 +313,270 @@ class SemanticVersionEdgeCasesTestCase(TestCase):
         self.assertEqual(app_version.version, '1.0.0')
         
         app_version.delete()
+
+
+class MobileAppVersionAdminActionsTestCase(TestCase):
+    """Test cases for MobileAppVersion admin bulk actions."""
+
+    def setUp(self):
+        """Set up test fixtures."""
+        self.site = AdminSite()
+        self.admin = MobileAppVersionAdmin(MobileAppVersion, self.site)
+        self.factory = RequestFactory()
+        
+        # Create a superuser for admin requests
+        self.user = User.objects.create_superuser(
+            username='admin',
+            email='admin@test.com',
+            password='password123'
+        )
+        
+        # Create test versions
+        self.version1 = MobileAppVersion.objects.create(
+            version='1.0.0',
+            platform_type=MobileAppVersion.PlatformType.ANDROID,
+            link='https://example.com/app1.apk',
+            forcing_update=False,
+            show_update=False,
+            release_notes='First version'
+        )
+        
+        self.version2 = MobileAppVersion.objects.create(
+            version='2.0.0',
+            platform_type=MobileAppVersion.PlatformType.IOS,
+            link='https://example.com/app2.ipa',
+            forcing_update=True,
+            show_update=True,
+            release_notes='Second version'
+        )
+        
+        self.version3 = MobileAppVersion.objects.create(
+            version='3.0.0',
+            platform_type=MobileAppVersion.PlatformType.PWA,
+            link='https://example.com/app3/',
+            forcing_update=False,
+            show_update=False,
+            release_notes='Third version'
+        )
+
+    def tearDown(self):
+        """Clean up test data."""
+        MobileAppVersion.objects.all().delete()
+        User.objects.all().delete()
+
+    def test_enable_versions_action(self):
+        """Test bulk enable versions action."""
+        # Select versions that are currently disabled
+        queryset = MobileAppVersion.objects.filter(
+            id__in=[self.version1.id, self.version3.id]
+        )
+        
+        # Create a mock request
+        request = self.factory.post('/admin/mobile_app_version/mobileappversion/')
+        request.user = self.user
+        
+        # Execute the action
+        self.admin.enable_versions(request, queryset)
+        
+        # Verify versions were enabled
+        self.version1.refresh_from_db()
+        self.version3.refresh_from_db()
+        
+        self.assertTrue(self.version1.show_update)
+        self.assertTrue(self.version3.show_update)
+        
+        # Verify other version wasn't affected
+        self.version2.refresh_from_db()
+        self.assertTrue(self.version2.show_update)  # Should remain True
+
+    def test_disable_versions_action(self):
+        """Test bulk disable versions action."""
+        # Select version that is currently enabled
+        queryset = MobileAppVersion.objects.filter(id=self.version2.id)
+        
+        # Create a mock request
+        request = self.factory.post('/admin/mobile_app_version/mobileappversion/')
+        request.user = self.user
+        
+        # Execute the action
+        self.admin.disable_versions(request, queryset)
+        
+        # Verify version was disabled
+        self.version2.refresh_from_db()
+        self.assertFalse(self.version2.show_update)
+        
+        # Verify other versions weren't affected
+        self.version1.refresh_from_db()
+        self.assertFalse(self.version1.show_update)  # Should remain False
+
+    def test_mark_force_update_action(self):
+        """Test bulk mark as force update action."""
+        # Select versions that don't have force update
+        queryset = MobileAppVersion.objects.filter(
+            id__in=[self.version1.id, self.version3.id]
+        )
+        
+        # Create a mock request
+        request = self.factory.post('/admin/mobile_app_version/mobileappversion/')
+        request.user = self.user
+        
+        # Execute the action
+        self.admin.mark_force_update(request, queryset)
+        
+        # Verify versions were marked for force update
+        self.version1.refresh_from_db()
+        self.version3.refresh_from_db()
+        
+        self.assertTrue(self.version1.forcing_update)
+        self.assertTrue(self.version3.forcing_update)
+        
+        # Verify other version wasn't affected
+        self.version2.refresh_from_db()
+        self.assertTrue(self.version2.forcing_update)  # Should remain True
+
+    def test_unmark_force_update_action(self):
+        """Test bulk unmark as force update action."""
+        # Select version that has force update enabled
+        queryset = MobileAppVersion.objects.filter(id=self.version2.id)
+        
+        # Create a mock request
+        request = self.factory.post('/admin/mobile_app_version/mobileappversion/')
+        request.user = self.user
+        
+        # Execute the action
+        self.admin.unmark_force_update(request, queryset)
+        
+        # Verify version was unmarked from force update
+        self.version2.refresh_from_db()
+        self.assertFalse(self.version2.forcing_update)
+        
+        # Verify other versions weren't affected
+        self.version1.refresh_from_db()
+        self.assertFalse(self.version1.forcing_update)  # Should remain False
+
+    def test_export_to_csv_action(self):
+        """Test CSV export action."""
+        # Select all versions
+        queryset = MobileAppVersion.objects.all().order_by('id')
+        
+        # Create a mock request
+        request = self.factory.post('/admin/mobile_app_version/mobileappversion/')
+        request.user = self.user
+        
+        # Execute the action
+        response = self.admin.export_to_csv(request, queryset)
+        
+        # Verify response is a CSV file
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'text/csv')
+        self.assertEqual(
+            response['Content-Disposition'],
+            'attachment; filename="mobile_app_versions.csv"'
+        )
+        
+        # Parse CSV content
+        content = response.content.decode('utf-8')
+        csv_reader = csv.reader(io.StringIO(content))
+        rows = list(csv_reader)
+        
+        # Verify header
+        expected_header = [
+            "ID",
+            "Version",
+            "Platform Type",
+            "Release Notes",
+            "Link",
+            "Link 32",
+            "Forcing Update",
+            "Show Update",
+            "Manifest",
+            "Created At",
+        ]
+        self.assertEqual(rows[0], expected_header)
+        
+        # Verify data rows (should have 3 versions + 1 header)
+        self.assertEqual(len(rows), 4)
+        
+        # Verify first data row
+        self.assertEqual(rows[1][1], '1.0.0')  # Version
+        self.assertEqual(rows[1][2], 'ANDROID')  # Platform Type
+        self.assertEqual(rows[1][3], 'First version')  # Release Notes
+        self.assertEqual(rows[1][6], 'False')  # Forcing Update
+        self.assertEqual(rows[1][7], 'False')  # Show Update
+
+    def test_export_to_csv_with_selected_versions(self):
+        """Test CSV export with only selected versions."""
+        # Select only two versions
+        queryset = MobileAppVersion.objects.filter(
+            id__in=[self.version1.id, self.version2.id]
+        ).order_by('id')
+        
+        # Create a mock request
+        request = self.factory.post('/admin/mobile_app_version/mobileappversion/')
+        request.user = self.user
+        
+        # Execute the action
+        response = self.admin.export_to_csv(request, queryset)
+        
+        # Parse CSV content
+        content = response.content.decode('utf-8')
+        csv_reader = csv.reader(io.StringIO(content))
+        rows = list(csv_reader)
+        
+        # Verify only 2 versions were exported (+ 1 header)
+        self.assertEqual(len(rows), 3)
+        
+        # Verify the correct versions were exported
+        versions_in_csv = [rows[1][1], rows[2][1]]
+        self.assertIn('1.0.0', versions_in_csv)
+        self.assertIn('2.0.0', versions_in_csv)
+        self.assertNotIn('3.0.0', versions_in_csv)
+
+    def test_admin_actions_are_registered(self):
+        """Test that all actions are properly registered in admin."""
+        actions = self.admin.get_actions(None)
+        
+        # Verify all custom actions are registered
+        self.assertIn('enable_versions', actions)
+        self.assertIn('disable_versions', actions)
+        self.assertIn('mark_force_update', actions)
+        self.assertIn('unmark_force_update', actions)
+        self.assertIn('export_to_csv', actions)
+
+    def test_enable_all_versions(self):
+        """Test enabling all versions at once."""
+        # All versions start with various states
+        queryset = MobileAppVersion.objects.all()
+        
+        # Create a mock request
+        request = self.factory.post('/admin/mobile_app_version/mobileappversion/')
+        request.user = self.user
+        
+        # Execute the action
+        self.admin.enable_versions(request, queryset)
+        
+        # Verify all versions are now enabled
+        for version in MobileAppVersion.objects.all():
+            self.assertTrue(
+                version.show_update,
+                f"Version {version.version} should be enabled"
+            )
+
+    def test_mark_all_force_update(self):
+        """Test marking all versions for force update at once."""
+        # All versions start with various states
+        queryset = MobileAppVersion.objects.all()
+        
+        # Create a mock request
+        request = self.factory.post('/admin/mobile_app_version/mobileappversion/')
+        request.user = self.user
+        
+        # Execute the action
+        self.admin.mark_force_update(request, queryset)
+        
+        # Verify all versions are now marked for force update
+        for version in MobileAppVersion.objects.all():
+            self.assertTrue(
+                version.forcing_update,
+                f"Version {version.version} should be marked for force update"
+            )
